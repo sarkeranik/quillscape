@@ -23,7 +23,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
   return response.items.map((item: any) => ({
     title: item.fields.title,
     slug: item.fields.slug,
-    author: item.fields.author,
+    author: item.fields.auther,
     date: item.fields.date,
     content: item.fields.content,
   }));

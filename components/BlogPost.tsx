@@ -2,7 +2,9 @@
 
 import { format } from 'date-fns';
 import type { BlogPost } from '@/lib/contentful';
+import { useState } from 'react';
 import Link from 'next/link';
+import CommentSection from './CommentSection';
 
 interface BlogPostProps {
   post: BlogPost;
@@ -52,6 +54,8 @@ export default function BlogPost({ post }: BlogPostProps) {
           ))}
         </div>
       </div>
+
+      <CommentSection postSlug={post.slug} />
 
       <footer className="mt-12 pt-8 border-t border-gray-200">
         <Link
