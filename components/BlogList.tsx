@@ -14,19 +14,19 @@ export default function BlogList({ posts }: BlogListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 5;
 
-  // Filter posts based on search query
   const filteredPosts = posts.filter(post => {
     if (!searchQuery) return true;
     
     const searchLower = searchQuery.toLowerCase();
-    return (
-      (post?.title?.toLowerCase() || '').includes(searchLower) ||
-      (post?.content?.toLowerCase() || '').includes(searchLower) ||
-      (post?.author?.toLowerCase() || '').includes(searchLower)
-    );
+    const title = post?.title?.toLowerCase() || '';
+    const content = post?.content?.toLowerCase() || '';
+    const author = post?.author?.toLowerCase() || '';
+    
+    return title.includes(searchLower) || 
+           content.includes(searchLower) || 
+           author.includes(searchLower);
   });
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * postsPerPage,
@@ -37,7 +37,6 @@ export default function BlogList({ posts }: BlogListProps) {
     <div className="max-w-4xl mx-auto py-8 px-4">
       <h1 className="text-4xl font-bold mb-8">Blog Posts</h1>
 
-      {/* Search Bar */}
       <div className="mb-8">
         <input
           type="text"
@@ -52,7 +51,6 @@ export default function BlogList({ posts }: BlogListProps) {
         />
       </div>
 
-      {/* Posts List */}
       <div className="space-y-8">
         {paginatedPosts.map((post) => (
           <Link 
@@ -81,7 +79,6 @@ export default function BlogList({ posts }: BlogListProps) {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="mt-8 flex justify-center space-x-2">
           <button
@@ -122,7 +119,6 @@ export default function BlogList({ posts }: BlogListProps) {
         </div>
       )}
 
-      {/* Results Summary */}
       <div className="mt-4 text-center text-gray-600" role="status">
         Showing {paginatedPosts.length} of {filteredPosts.length} posts
       </div>
