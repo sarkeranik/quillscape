@@ -1,8 +1,16 @@
-export default function Home() {
+import BlogList from '@/components/BlogList';
+import { getAllPosts } from '@/lib/contentful';
+import { Suspense } from 'react';
+import BlogPostSkeleton from '@/components/BlogPostSkeleton';
+
+export default async function Home() {
+  const posts = await getAllPosts();
+  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Welcome to Quillscape</h1>
-      <p className="mt-4 text-xl">Where thoughts bloom and stories flourish</p>
-    </main>
+    <div className="animate-in fade-in duration-500">
+      <Suspense fallback={<BlogPostSkeleton />}>
+        <BlogList posts={posts} />
+      </Suspense>
+    </div>
   );
 }
