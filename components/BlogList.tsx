@@ -7,6 +7,7 @@ import type { BlogPost } from "@/lib/contentful";
 import { Search, Calendar, User, Loader2 } from "lucide-react";
 import { debounce } from "lodash";
 import { getPosts } from "@/lib/posts";
+import LoadingDots from "./LoadingDots";
 
 interface BlogListProps {
   initialPosts: BlogPost[];
@@ -81,7 +82,9 @@ export default function BlogList({ initialPosts }: BlogListProps) {
             aria-label="Search posts"
           />
           {isLoading && (
-            <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 animate-spin" />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <LoadingDots />
+            </div>
           )}
         </div>
         {error && (
