@@ -1,15 +1,15 @@
-import BlogList from '@/components/BlogList';
-import { getAllPosts } from '@/lib/contentful';
-import { Suspense } from 'react';
-import BlogPostSkeleton from '@/components/BlogPostSkeleton';
+import BlogList from "@/components/BlogList";
+import BlogPostSkeleton from "@/components/BlogPostSkeleton";
+import { Suspense } from "react";
+import { getPosts } from "@/lib/posts";
 
 export default async function Home() {
-  const posts = await getAllPosts();
-  
+  const posts = await getPosts().catch(() => []);
+
   return (
     <div className="animate-in fade-in duration-500">
       <Suspense fallback={<BlogPostSkeleton />}>
-        <BlogList posts={posts} />
+        <BlogList initialPosts={posts} />
       </Suspense>
     </div>
   );

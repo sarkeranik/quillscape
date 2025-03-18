@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   // Only check API routes that need protection
-  if (!request.nextUrl.pathname.startsWith("/api/comments")) {
+  if (!request.nextUrl.pathname.startsWith("/api/")) {
     return NextResponse.next();
   }
 
