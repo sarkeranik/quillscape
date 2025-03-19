@@ -44,7 +44,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
   return {
     title: item.fields.title,
     slug: item.fields.slug,
-    author: item.fields.author,
+    author: item.fields.auther,
     date: item.fields.date,
     content: item.fields.content,
   };
