@@ -4,6 +4,8 @@
 
 A modern blog application built with Next.js 14, Contentful CMS, and TypeScript. Features include blog post listing, real-time search, pagination, and a complete comment system with CRUD operations.
 
+🌐 **Live Demo**: [https://quillscape-xi.vercel.app/](https://quillscape-xi.vercel.app/)
+
 ## Features
 
 - 📝 Blog posts from Contentful CMS
