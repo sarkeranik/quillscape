@@ -24,9 +24,23 @@ const config: Config = {
         "fade-in": "fade-in 0.5s ease-out",
         in: "fade-in 0.5s ease-out",
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: "none",
+            color: "inherit",
+            a: {
+              color: "#3b82f6",
+              "&:hover": {
+                color: "#2563eb",
+              },
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 };
 
 export default config;

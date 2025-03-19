@@ -1,8 +1,16 @@
-export default function Home() {
+import BlogList from "@/components/BlogList";
+import BlogPostSkeleton from "@/components/BlogPostSkeleton";
+import { Suspense } from "react";
+import { getPosts } from "@/lib/posts";
+
+export default async function Home() {
+  const posts = await getPosts().catch(() => []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <h1 className="text-4xl font-bold">Welcome to Quillscape</h1>
-      <p className="mt-4 text-xl">Where thoughts bloom and stories flourish</p>
-    </main>
+    <div className="animate-in fade-in duration-500">
+      <Suspense fallback={<BlogPostSkeleton />}>
+        <BlogList initialPosts={posts} />
+      </Suspense>
+    </div>
   );
 }
