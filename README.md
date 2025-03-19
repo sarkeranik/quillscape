@@ -58,7 +58,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/sarkeranik/quillscape.git
 cd quillscape
 ```
 
@@ -102,11 +102,6 @@ quillscape/
 - `GET /api/posts`
   - Query parameters:
     - `search`: Search posts by title, content, or author
-    - `author`: Filter by author
-    - `startDate`: Filter posts after date
-    - `endDate`: Filter posts before date
-    - `sort`: Sort by 'date', 'title', or 'author'
-    - `order`: 'asc' or 'desc'
   - Response:
     ```typescript
     {
@@ -114,14 +109,7 @@ quillscape/
       meta: {
         total: number;
         filters: {
-          author: string | null;
-          startDate: string | null;
-          endDate: string | null;
           search: string | null;
-        };
-        sort: {
-          field: string;
-          order: string;
         };
       };
     }
@@ -177,7 +165,6 @@ Create a content model in Contentful with the following fields:
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
-- `npm run test:middleware` - Test API authentication middleware
 
 ### Adding New Features
 
@@ -204,10 +191,6 @@ Create a content model in Contentful with the following fields:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
