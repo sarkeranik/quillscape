@@ -1,32 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { useState, useCallback } from "react";
 import type { BlogPost } from "@/lib/contentful";
-import { Search, Calendar, User, Loader2 } from "lucide-react";
+import { Search, Calendar, User, Loader2, Filter } from "lucide-react";
 import { debounce } from "lodash";
 import { getPosts } from "@/lib/posts";
-import LoadingDots from "./LoadingDots";
 
 interface BlogListProps {
   initialPosts: BlogPost[];
 }
 
+interface Filters {
+  search: string;
+  author: string;
+  startDate: string;
+  endDate: string;
+}
+
 export default function BlogList({ initialPosts }: BlogListProps) {
   const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<Filters>({
+    search: "",
+    author: "",
+    startDate: "",
+    endDate: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const postsPerPage = 5;
 
-  const fetchPosts = async (search: string) => {
+  const fetchPosts = async (newFilters: Filters) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const fetchedPosts = await getPosts(search);
+      const fetchedPosts = await getPosts({
+        search: newFilters.search || undefined,
+        author: newFilters.author || undefined,
+        startDate: newFilters.startDate || undefined,
+        endDate: newFilters.endDate || undefined,
+      });
       setPosts(fetchedPosts);
       setCurrentPage(1);
     } catch (err) {
@@ -38,25 +55,34 @@ export default function BlogList({ initialPosts }: BlogListProps) {
     }
   };
 
-  // Create a debounced version of fetchPosts
   const debouncedFetchPosts = useCallback(
-    debounce((search: string) => {
-      if (search === "") {
+    debounce((newFilters: Filters) => {
+      if (Object.values(newFilters).every((v) => !v)) {
         setPosts(initialPosts);
         setIsLoading(false);
       } else {
-        fetchPosts(search);
+        fetchPosts(newFilters);
       }
     }, 300),
     [initialPosts]
   );
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
+  const handleFilterChange = (name: keyof Filters, value: string) => {
+    const newFilters = { ...filters, [name]: value };
+    setFilters(newFilters);
     setIsLoading(true);
-    debouncedFetchPosts(value);
+    debouncedFetchPosts(newFilters);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      search: "",
+      author: "",
+      startDate: "",
+      endDate: "",
+    });
+    setPosts(initialPosts);
+    setCurrentPage(1);
   };
 
   const paginatedPosts = posts.slice(
@@ -70,23 +96,101 @@ export default function BlogList({ initialPosts }: BlogListProps) {
     <div className="max-w-4xl mx-auto py-8 px-4">
       <h1 className="text-4xl font-bold mb-8">Blog Posts</h1>
 
-      <div className="mb-8 relative">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input
-            type="text"
-            placeholder="Search posts..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            aria-label="Search posts"
-          />
-          {isLoading && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <LoadingDots />
-            </div>
-          )}
+      <div className="mb-8">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
+              className="w-full pl-10 pr-3 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              aria-label="Search posts"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center gap-2 px-4 py-3 border rounded-lg hover:bg-gray-50"
+            aria-expanded={showFilters}
+            aria-label="Toggle filters"
+          >
+            <Filter className="h-5 w-5" />
+            Filters
+          </button>
         </div>
+
+        {showFilters && (
+          <div className="bg-white p-4 rounded-lg border shadow-sm space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label
+                  htmlFor="author"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Author
+                </label>
+                <input
+                  type="text"
+                  id="author"
+                  value={filters.author}
+                  onChange={(e) => handleFilterChange("author", e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                  placeholder="Filter by author"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="startDate"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  id="startDate"
+                  value={filters.startDate}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="endDate"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  id="endDate"
+                  value={filters.endDate}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                onClick={clearFilters}
+                className="text-sm text-gray-600 hover:text-gray-900"
+              >
+                Clear filters
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="flex justify-center mt-4">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+          </div>
+        )}
+
         {error && (
           <p className="mt-2 text-red-600 text-sm" role="alert">
             {error}
@@ -108,9 +212,7 @@ export default function BlogList({ initialPosts }: BlogListProps) {
                 </div>
                 <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2" />
-                  <span>
-                    {format(new Date(post.date || new Date()), "MMMM d, yyyy")}
-                  </span>
+                  <span>{format(parseISO(post.date), "MMMM d, yyyy")}</span>
                 </div>
               </div>
               <p className="text-gray-700">
@@ -122,7 +224,7 @@ export default function BlogList({ initialPosts }: BlogListProps) {
 
         {paginatedPosts.length === 0 && !isLoading && (
           <div className="text-center py-8 text-gray-500" role="alert">
-            No posts found matching your search.
+            No posts found matching your criteria.
           </div>
         )}
       </div>

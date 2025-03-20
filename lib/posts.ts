@@ -16,11 +16,20 @@ interface PostsResponse {
     };
   };
 }
+interface PostFilters {
+  search?: string;
+  author?: string;
+  startDate?: string;
+  endDate?: string;
+}
 
-export async function getPosts(search?: string): Promise<BlogPost[]> {
+export async function getPosts(filters: PostFilters = {}): Promise<BlogPost[]> {
   try {
     const params = new URLSearchParams();
-    if (search) params.append("search", search);
+    if (filters.search) params.append("search", filters.search);
+    if (filters.author) params.append("author", filters.author);
+    if (filters.startDate) params.append("startDate", filters.startDate);
+    if (filters.endDate) params.append("endDate", filters.endDate);
 
     const response = await fetch(
       `${

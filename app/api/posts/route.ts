@@ -1,71 +1,90 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllPosts } from "@/lib/contentful";
+import {
+  isValid,
+  parseISO,
+  isSameDay,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+} from "date-fns";
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-
-    // Get filter parameters
-    const author = searchParams.get("author");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
-    const search = searchParams.get("search");
-    const sort = searchParams.get("sort") || "date"; // Default sort by date
-    const order = searchParams.get("order") || "desc"; // Default order descending
+    const search = searchParams.get("search")?.trim();
+    const author = searchParams.get("author")?.trim();
+    const startDate = searchParams.get("startDate")?.trim();
+    const endDate = searchParams.get("endDate")?.trim();
 
     // Fetch all posts
     let posts = await getAllPosts();
 
-    // Apply filters with null checks
-    if (author) {
-      posts = posts.filter(
-        (post) => (post.author || "").toLowerCase() === author.toLowerCase()
-      );
+    // Apply filters
+    if (search || author || startDate || endDate) {
+      posts = posts.filter((post) => {
+        let matches = true;
+
+        // Search filter
+        if (search) {
+          const searchLower = search.toLowerCase();
+          const postTitle = (post.title || "").toLowerCase().trim();
+          const postContent = (post.content || "").toLowerCase().trim();
+          const postAuthor = (post.author || "").toLowerCase().trim();
+
+          matches =
+            matches &&
+            (postTitle.includes(searchLower) ||
+              postContent.includes(searchLower) ||
+              postAuthor.includes(searchLower));
+        }
+
+        // Author filter
+        if (author && matches) {
+          const authorLower = author.toLowerCase();
+          const postAuthor = post.author.toLowerCase().trim();
+          matches = postAuthor === authorLower;
+        }
+
+        // Date range filter
+        if (matches && (startDate || endDate)) {
+          const postDate = parseISO(post.date);
+
+          if (startDate && endDate) {
+            const start = startOfDay(parseISO(startDate));
+            const end = endOfDay(parseISO(endDate));
+
+            if (isValid(start) && isValid(end)) {
+              matches = matches && isWithinInterval(postDate, { start, end });
+            }
+          } else if (startDate) {
+            const start = startOfDay(parseISO(startDate));
+            if (isValid(start)) {
+              matches =
+                matches &&
+                (isSameDay(postDate, start) ||
+                  isWithinInterval(postDate, {
+                    start,
+                    end: endOfDay(new Date()),
+                  }));
+            }
+          } else if (endDate) {
+            const end = endOfDay(parseISO(endDate));
+            if (isValid(end)) {
+              matches =
+                matches &&
+                (isSameDay(postDate, end) ||
+                  isWithinInterval(postDate, {
+                    start: startOfDay(new Date(0)),
+                    end,
+                  }));
+            }
+          }
+        }
+
+        return matches;
+      });
     }
-
-    if (startDate) {
-      const start = new Date(startDate);
-      posts = posts.filter(
-        (post) => new Date(post.date || new Date()) >= start
-      );
-    }
-
-    if (endDate) {
-      const end = new Date(endDate);
-      posts = posts.filter((post) => new Date(post.date || new Date()) <= end);
-    }
-
-    if (search) {
-      const searchLower = search.toLowerCase();
-      posts = posts.filter(
-        (post) =>
-          (post.title || "").toLowerCase().includes(searchLower) ||
-          (post.content || "").toLowerCase().includes(searchLower) ||
-          (post.author || "").toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Apply sorting with null checks
-    posts.sort((a, b) => {
-      let comparison = 0;
-
-      switch (sort) {
-        case "title":
-          comparison = (a.title || "").localeCompare(b.title || "");
-          break;
-        case "author":
-          comparison = (a.author || "").localeCompare(b.author || "");
-          break;
-        case "date":
-        default:
-          comparison =
-            new Date(b.date || new Date()).getTime() -
-            new Date(a.date || new Date()).getTime();
-          break;
-      }
-
-      return order === "asc" ? comparison : -comparison;
-    });
 
     // Return response with metadata
     return NextResponse.json({
@@ -73,14 +92,10 @@ export async function GET(request: NextRequest) {
       meta: {
         total: posts.length,
         filters: {
+          search: search || null,
           author: author || null,
           startDate: startDate || null,
           endDate: endDate || null,
-          search: search || null,
-        },
-        sort: {
-          field: sort,
-          order,
         },
       },
     });
