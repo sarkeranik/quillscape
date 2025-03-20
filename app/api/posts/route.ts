@@ -3,10 +3,10 @@ import { getAllPosts } from "@/lib/contentful";
 import {
   isValid,
   parseISO,
-  isSameDay,
-  isWithinInterval,
   startOfDay,
   endOfDay,
+  compareAsc,
+  compareDesc,
 } from "date-fns";
 
 export async function GET(request: NextRequest) {
@@ -48,37 +48,32 @@ export async function GET(request: NextRequest) {
 
         // Date range filter
         if (matches && (startDate || endDate)) {
-          const postDate = parseISO(post.date);
+          try {
+            const postDate = parseISO(post.date);
 
-          if (startDate && endDate) {
-            const start = startOfDay(parseISO(startDate));
-            const end = endOfDay(parseISO(endDate));
+            if (startDate && endDate) {
+              const start = startOfDay(parseISO(startDate));
+              const end = endOfDay(parseISO(endDate));
 
-            if (isValid(start) && isValid(end)) {
-              matches = matches && isWithinInterval(postDate, { start, end });
+              if (isValid(start) && isValid(end)) {
+                matches =
+                  compareAsc(postDate, start) >= 0 &&
+                  compareDesc(postDate, end) >= 0;
+              }
+            } else if (startDate) {
+              const start = startOfDay(parseISO(startDate));
+              if (isValid(start)) {
+                matches = compareAsc(postDate, start) >= 0;
+              }
+            } else if (endDate) {
+              const end = endOfDay(parseISO(endDate));
+              if (isValid(end)) {
+                matches = compareDesc(postDate, end) >= 0;
+              }
             }
-          } else if (startDate) {
-            const start = startOfDay(parseISO(startDate));
-            if (isValid(start)) {
-              matches =
-                matches &&
-                (isSameDay(postDate, start) ||
-                  isWithinInterval(postDate, {
-                    start,
-                    end: endOfDay(new Date()),
-                  }));
-            }
-          } else if (endDate) {
-            const end = endOfDay(parseISO(endDate));
-            if (isValid(end)) {
-              matches =
-                matches &&
-                (isSameDay(postDate, end) ||
-                  isWithinInterval(postDate, {
-                    start: startOfDay(new Date(0)),
-                    end,
-                  }));
-            }
+          } catch (error) {
+            console.error("Date parsing error:", error);
+            matches = false;
           }
         }
 

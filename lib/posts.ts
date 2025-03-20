@@ -55,6 +55,6 @@ export async function getPosts(filters: PostFilters = {}): Promise<BlogPost[]> {
     return data.posts;
   } catch (error) {
     console.error("Error fetching posts:", error);
-    throw error;
+    return [];
   }
 }
