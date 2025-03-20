@@ -104,6 +104,9 @@ quillscape/
 - `GET /api/posts`
   - Query parameters:
     - `search`: Search posts by title, content, or author
+    - `author`: Filter posts by author name
+    - `startDate`: Filter posts from this date
+    - `endDate`: Filter posts until this date
   - Response:
     ```typescript
     {
@@ -112,8 +115,11 @@ quillscape/
         total: number;
         filters: {
           search: string | null;
-        };
-      };
+          author: string | null;
+          startDate: string | null;
+          endDate: string | null;
+        }
+      }
     }
     ```
 
